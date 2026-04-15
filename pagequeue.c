@@ -16,27 +16,42 @@
  * @brief Create and initialize a page queue with a given capacity
  */
 PageQueue *pqInit(unsigned int maxSize) {
-    // TODO: malloc a PageQueue, set head and tail to NULL,
-    //       size to 0, maxSize to maxSize, and return the pointer
-    return NULL;
+
+    PageQueue* pq = (PageQueue*) malloc(sizeof(PageQueue));
+    pq->head = NULL;
+    pq->tail = NULL;
+    pq->size = 0;
+    pq->maxSize = maxSize;
+    return pq;
 }
 
 /**
  * @brief Access a page in the queue (simulates a memory reference)
  */
 long pqAccess(PageQueue *pq, unsigned long pageNum) {
-    // TODO: Search the queue for pageNum (suggest searching tail->head
-    //       so you naturally count depth from the MRU end).
-    //
-    // HIT path (page found at depth d):
-    //   - Remove the node from its current position and re-insert
-    //     it at the tail (most recently used).
-    //   - Return d.
-    //
-    // MISS path (page not found):
-    //   - Allocate a new node for pageNum and insert it at the tail.
-    //   - If size now exceeds maxSize, evict the head node (free it).
-    //   - Return -1.
+
+    int depth = 0;
+    PqNode* current = pq->tail;
+    while(current != NULL) { //Break loop when end aka head
+        if(current->pageNum == pageNum) { //Conditon met
+            pqPop(pq, current);
+            return depth;
+        } else {
+            depth++;
+            current = current->prev;
+        }
+    }
+    //Outside of while loop means miss
+    PqNode* new = nodeInit(pageNum);
+    if(pq->tail == NULL) {
+        pq->head = new;
+        pq->tail = new;
+    } else {
+        pq->tail->next = new;
+        new->prev = pq->tail;
+        pq->tail = new;
+    }
+    pq->size++;
     return -1;
 }
 
@@ -44,8 +59,14 @@ long pqAccess(PageQueue *pq, unsigned long pageNum) {
  * @brief Free all nodes in the queue and reset it to empty
  */
 void pqFree(PageQueue *pq) {
-    // TODO: Walk from head to tail, free each node, then free
-    //       the PageQueue struct itself.
+
+    PqNode* current = pq->head;
+    while(current != NULL) {
+        PqNode* temp = current->next;
+        free(current);
+        current = temp;
+    }
+    free(pq);
 }
 
 /**
@@ -55,4 +76,62 @@ void pqPrint(PageQueue *pq) {
     // TODO (optional): Print each page number from head to tail,
     //                  marking which is head and which is tail.
     //                  Useful for desk-checking small traces.
+}
+
+void pqInsertTail(PageQueue *pq, PqNode* node) {
+    if(pq == NULL) {
+        return;
+    }
+    if(pq->tail == NULL) {
+        pq->head = node;
+        pq->tail = node;
+        node->prev = NULL;
+        node->next = NULL;
+        pq->size++;
+        return;
+    }
+    node->prev = pq->tail;
+    pq->tail->next = node;
+    pq->tail = node;
+    node->next = NULL;
+    pq->size++;
+
+    //Check for exceeding size
+    if(pq->size > pq->maxSize) {
+        PqNode* temp = pq->head;
+        pq->head = temp->next;
+        pq->head->prev = NULL;
+        free(temp);
+        pq->size--;
+    }
+}
+
+PqNode* pqPop(PageQueue* pq, PqNode* current) {
+
+    if (current == pq->tail) {
+        return current; //Alr at end of queue
+    } 
+    if(current == pq->head) {
+        pq->head = current->next;
+        pq->head->prev = NULL;
+    } else {
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+    }
+
+    current->prev = NULL;
+    current->next = NULL;
+    pq->size--;
+    pqInsertTail(pq,current);
+
+    return current;
+
+}
+
+PqNode* nodeInit(unsigned long pageNum) {
+    PqNode* node = (PqNode*) malloc (sizeof(PqNode));
+    node->pageNum = pageNum;
+    node->next = NULL;
+    node->prev = NULL;
+    return node;
 }

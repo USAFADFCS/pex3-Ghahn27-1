@@ -6,7 +6,10 @@
  * Purpose: Reads a BYU binary memory trace file and simulates
  *          LRU page replacement to measure fault rates across
  *          varying frame allocations.
- * Documentation: TBD
+ * Documentation: 
+ * https://www.geeksforgeeks.org/c/dynamic-memory-allocation-in-c-using-malloc-calloc-free-and-realloc/
+ * https://www.geeksforgeeks.org/dsa/program-for-least-recently-used-lru-page-replacement-algorithm/
+ * I used my 220 pex3 for help with LL.
  * =========================================================== */
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +74,7 @@ int main(int argc, char **argv) {
     //       and allocate the faults[] array.  faults[f] will hold the
     //       total number of page faults that occur when f frames are
     //       available.  Use calloc so all entries start at zero.
+    
 
     // Process each memory access from the trace file
     while (!feof(ifp)) {
